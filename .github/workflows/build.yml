@@ -19,9 +19,7 @@ jobs:
           submodules: recursive
 
       - name: Sync upstream tags
-        run: |
-          git remote add upstream https://github.com || true
-          git fetch upstream --tags --force
+        run: git fetch --tags --force https://github.com
 
       - name: Set up JDK
         uses: actions/setup-java@v6
