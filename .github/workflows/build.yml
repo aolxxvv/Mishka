@@ -1,12 +1,10 @@
-name: Build
+
+name: Build Mishka Debug
 
 on:
   push:
     paths-ignore:
       - "**.md"
-    branches:
-      - main
-  pull_request:
     branches:
       - main
   workflow_dispatch:
@@ -15,10 +13,14 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build-apk:
-    name: Build APK
+    name: Build Debug APK
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -41,36 +43,28 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Decode Android signing key
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          echo "$SIGNING_KEY" | base64 -d > keystore.jks
+          test -s keystore.jks
+
       - name: Download GeoIP files
         run: ./gradlew :app:downloadGeoFiles
 
       - name: Build Debug APK
         run: ./gradlew :app:assembleDebug
+        env:
+          KEYSTORE_PATH: "${{ github.workspace }}/keystore.jks"
+          KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload Debug APK (arm64-v8a)
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v7
         with:
-          name: Mishka-debug-arm64-v8a
+          name: Mishka-Debug-ARM64
           path: app/build/outputs/apk/debug/*-arm64-v8a-*.apk
-          archive: false
-
-      - name: Upload Debug APK (armeabi-v7a)
-        uses: actions/upload-artifact@v7
-        with:
-          name: Mishka-debug-armeabi-v7a
-          path: app/build/outputs/apk/debug/*-armeabi-v7a-*.apk
-          archive: false
-
-      - name: Upload Debug APK (x86_64)
-        uses: actions/upload-artifact@v7
-        with:
-          name: Mishka-debug-x86_64
-          path: app/build/outputs/apk/debug/*-x86_64-*.apk
-          archive: false
-
-      - name: Upload Debug APK (x86)
-        uses: actions/upload-artifact@v7
-        with:
-          name: Mishka-debug-x86
-          path: app/build/outputs/apk/debug/*-x86-*.apk
-          archive: false
+          if-no-files-found: error
+          retention-days: 14
