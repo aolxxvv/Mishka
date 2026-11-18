@@ -19,7 +19,7 @@ jobs:
           submodules: recursive
 
       - name: Sync upstream tags
-        run: git fetch --tags --force https://github.com
+        run: git fetch --tags --force https://github.com/YuKongA/Mishka
 
       - name: Set up JDK
         uses: actions/setup-java@v6
