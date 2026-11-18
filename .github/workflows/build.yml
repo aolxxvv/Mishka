@@ -1,26 +1,16 @@
-
-name: Build Mishka Debug
+name: Build
 
 on:
-  push:
-    paths-ignore:
-      - "**.md"
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 
-permissions:
-  contents: read
-
 jobs:
   build-apk:
-    name: Build Debug APK
+    name: Build APK
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -46,25 +36,22 @@ jobs:
       - name: Decode Android signing key
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        run: |
-          echo "$SIGNING_KEY" | base64 -d > keystore.jks
-          test -s keystore.jks
+        run: echo "$SIGNING_KEY" | base64 -d > keystore.jks
 
       - name: Download GeoIP files
         run: ./gradlew :app:downloadGeoFiles
 
-      - name: Build Debug APK
-        run: ./gradlew :app:assembleDebug
+      - name: Build Release APK
+        run: ./gradlew :app:assembleRelease
         env:
           KEYSTORE_PATH: "${{ github.workspace }}/keystore.jks"
           KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload Debug APK
+      - name: Upload Release APK (arm64-v8a)
         uses: actions/upload-artifact@v7
         with:
-          name: Mishka-Debug-ARM64
-          path: app/build/outputs/apk/debug/*-arm64-v8a-*.apk
-          if-no-files-found: error
-          retention-days: 14
+          name: Mishka-release-arm64-v8a
+          path: app/build/outputs/apk/release/*-arm64-v8a-*.apk
+          archive: false
