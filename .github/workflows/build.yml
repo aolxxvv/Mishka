@@ -41,25 +41,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Decode Android signing key
-        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-        env:
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        run: echo "$SIGNING_KEY" | base64 -d > keystore.jks
-
       - name: Download GeoIP files
         run: ./gradlew :app:downloadGeoFiles
 
       - name: Build Debug APK
         run: ./gradlew :app:assembleDebug
-
-      - name: Build Release APK
-        run: ./gradlew :app:assembleRelease
-        env:
-          KEYSTORE_PATH: "${{ github.workspace }}/keystore.jks"
-          KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload Debug APK (arm64-v8a)
         uses: actions/upload-artifact@v7
@@ -87,32 +73,4 @@ jobs:
         with:
           name: Mishka-debug-x86
           path: app/build/outputs/apk/debug/*-x86-*.apk
-          archive: false
-
-      - name: Upload Release APK (arm64-v8a)
-        uses: actions/upload-artifact@v7
-        with:
-          name: Mishka-release-arm64-v8a
-          path: app/build/outputs/apk/release/*-arm64-v8a-*.apk
-          archive: false
-
-      - name: Upload Release APK (armeabi-v7a)
-        uses: actions/upload-artifact@v7
-        with:
-          name: Mishka-release-armeabi-v7a
-          path: app/build/outputs/apk/release/*-armeabi-v7a-*.apk
-          archive: false
-
-      - name: Upload Release APK (x86_64)
-        uses: actions/upload-artifact@v7
-        with:
-          name: Mishka-release-x86_64
-          path: app/build/outputs/apk/release/*-x86_64-*.apk
-          archive: false
-
-      - name: Upload Release APK (x86)
-        uses: actions/upload-artifact@v7
-        with:
-          name: Mishka-release-x86
-          path: app/build/outputs/apk/release/*-x86-*.apk
           archive: false
