@@ -1,6 +1,14 @@
 name: Build
 
 on:
+  push:
+    paths-ignore:
+      - "**.md"
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -37,6 +45,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Decode Android signing key
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: echo "$SIGNING_KEY" | base64 -d > keystore.jks
