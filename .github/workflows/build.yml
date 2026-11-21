@@ -36,14 +36,6 @@ jobs:
           echo "=== 提取 app 源码中的外部网址（排除常见开源/测速域名） ==="
           grep -rnE "https?://[a-zA-Z0-9./?=_-]+" app/src/main/ | grep -vE "github\.com|githubusercontent\.com|gstatic\.com|google\.com|cloudflare\.com|jsdelivr\.net|apache\.org|schemas\.android\.com|yukonga\.top" || true
 
-      # --- 安全检测 2：扫描源码中的可疑外联 URL（防偷订阅后门） ---
-      - name: Audit Hardcoded URLs in Source
-        run: |
-          echo "=== 提取 app 源码中的外部网址（排除常见开源/测速域名） ==="
-          grep -rnE "https?://[a-zA-Z0-9./?=_-]+" app/src/main/ \
-
-            | grep -vE "github\.com|githubusercontent\.com|gstatic\.com|google\.com|cloudflare\.com|jsdelivr\.net|apache\.org|schemas\.android\.com|yukonga\.top" || true
-
       # --- 安全检测 3：Semgrep 静态源码扫描 ---
       - name: Run Semgrep SAST
         uses: returntocorp/semgrep-action@v1
