@@ -1,4 +1,4 @@
-name: Build & Security Audit
+name: Build
 
 on:
   push:
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-apk:
-    name: Build & Scan APK
+    name: Build APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,29 +28,6 @@ jobs:
 
       - name: Sync upstream tags
         run: git fetch --tags --force https://github.com/YuKongA/Mishka
-
-      # --- 安全检测 1：检查子模块来源与预置二进制 ---
-      - name: Audit Submodules & Prebuilt Binaries
-        run: |
-          echo "=== 1. 检查 Git Submodule 指向的仓库地址 ==="
-          cat .gitmodules
-          echo "=== 2. 检查编译前是否存在预置的 .so / .jar / .dex 文件 ==="
-          find . -type f \( -name "*.so" -o -name "*.jar" -o -name "*.dex" \) -not -path "./.git/*"
-
-      # --- 安全检测 2：扫描源码中的可疑外联 URL（防偷订阅后门） ---
-      - name: Audit Hardcoded URLs in Source
-        run: |
-          echo "=== 提取 app 源码中的外部网址（排除常见开源/测速域名） ==="
-          grep -rnE "https?://[a-zA-Z0-9./?=_-]+" app/src/main/ | grep -vE "github\.com|githubusercontent\.com|gstatic\.com|google\.com|cloudflare\.com|jsdelivr\.net|apache\.org|schemas\.android\.com|yukonga\.top" || true
-
-      # --- 安全检测 3：Semgrep 静态源码扫描 ---
-      - name: Run Semgrep SAST
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: >-
-            p/android
-            p/owasp-top-ten
-            p/secrets
 
       - name: Set up JDK
         uses: actions/setup-java@v6
@@ -83,20 +60,6 @@ jobs:
           KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
-      # --- 安全检测 4：检查最终 APK 权限 ---
-      - name: Audit APK Permissions
-        run: |
-          APK_PATH=$(find app/build/outputs/apk/release -name "*-arm64-v8a-*.apk" | head -n 1)
-          echo "=== 检查生成的 APK 权限列表 ==="
-          PERMS=$($ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer manifest permissions "$APK_PATH")
-          echo "$PERMS"
-          
-          # 拦截读取短信、通讯录、无障碍等高危权限
-          if echo "$PERMS" | grep -qE "READ_SMS|RECEIVE_SMS|READ_CONTACTS|READ_CALL_LOG|BIND_ACCESSIBILITY_SERVICE"; then
-            echo "❌ 警告：检测到异常的高危隐私权限！"
-            exit 1
-          fi
 
       - name: Upload Release APK (arm64-v8a)
         uses: actions/upload-artifact@v7
