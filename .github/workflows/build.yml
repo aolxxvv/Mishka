@@ -49,6 +49,7 @@ jobs:
         with:
           config: >-
             p/android
+            p/owasp-top-ten
             p/secrets
 
       - name: Set up JDK
