@@ -30,6 +30,13 @@ jobs:
         run: git fetch --tags --force https://github.com/YuKongA/Mishka
 
       # --- 安全检测 1：检查子模块来源与预置二进制 ---
+      - name: Audit Submodules & Prebuilt Binaries
+        run: |
+          echo "=== 1. 检查 Git Submodule 指向的仓库地址 ==="
+          cat .gitmodules
+          echo "=== 2. 检查编译前是否存在预置的 .so / .jar / .dex 文件 ==="
+          find . -type f \( -name "*.so" -o -name "*.jar" -o -name "*.dex" \) -not -path "./.git/*"
+
       # --- 安全检测 2：扫描源码中的可疑外联 URL（防偷订阅后门） ---
       - name: Audit Hardcoded URLs in Source
         run: |
