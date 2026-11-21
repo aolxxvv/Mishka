@@ -16,6 +16,7 @@ plugins {
 
 dependencies {
     baselineProfile(projects.baselineprofile)
+    ksp(libs.androidx.room3.compiler)
     implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin)
     implementation(libs.bundles.androidx.lifecycle)
@@ -30,7 +31,8 @@ dependencies {
     implementation(libs.hiddenapibypass)
     implementation(libs.quickie.bundled)
     implementation(libs.scripta.editor)
-    ksp(libs.androidx.room3.compiler)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
 room3 {
@@ -71,6 +73,7 @@ android {
         }
         debug {
             if (keystoreFile != null) signingConfig = signingConfigs.getByName("release")
+            applicationIdSuffix = ".debug"
         }
     }
     buildFeatures {
